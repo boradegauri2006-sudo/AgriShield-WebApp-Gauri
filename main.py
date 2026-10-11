@@ -1,97 +1,75 @@
 
+import os
 import streamlit as st
 import tensorflow as tf
 import numpy as np
 import gdown
-import os
+
+# -------------------- Configuration --------------------
+
+st.set_page_config(
+    page_title="AgriShield | Plant Disease Detection",
+    page_icon="🌿",
+    layout="wide"
+)
 
 MODEL_PATH = "trained_model.h5"
 MODEL_URL = "https://drive.google.com/uc?id=1YNIs92QlZIJP0YQ2e5jGWUAuEWgFR_lE"
 
+# -------------------- Load Trained Model --------------------
+
 @st.cache_resource
 def load_model():
     if not os.path.exists(MODEL_PATH):
-        gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
-    return tf.keras.models.load_model(MODEL_PATH, compile=False)
+        with st.spinner("Downloading the trained model. Please wait..."):
+            downloaded_file = gdown.download(
+                MODEL_URL,
+                MODEL_PATH,
+                quiet=False
+            )
 
-# TensorFlow Model Prediction
+        if not downloaded_file or not os.path.exists(MODEL_PATH):
+            raise RuntimeError(
+                "Model download failed. Please check Google Drive sharing permissions."
+            )
+
+        if os.path.getsize(MODEL_PATH) < 1_000_000:
+            os.remove(MODEL_PATH)
+            raise RuntimeError(
+                "The downloaded file is too small to be the model. "
+                "Please check that the Google Drive link points to the model file."
+            )
+
+    return tf.keras.models.load_model(
+        MODEL_PATH,
+        compile=False
+    )
+
+
+# -------------------- Disease Prediction --------------------
+
 def model_prediction(test_image):
     model = load_model()
+
     image = tf.keras.preprocessing.image.load_img(
-        test_image, target_size=(128, 128)
+        test_image,
+        target_size=(128, 128)
     )
-    input_arr = tf.keras.preprocessing.image.img_to_array(image)
-    input_arr = np.array([input_arr])
-    prediction = model.predict(input_arr)
-    return np.argmax(prediction)
+
+    image_array = tf.keras.preprocessing.image.img_to_array(image)
+    image_array = np.expand_dims(image_array, axis=0)
+
+    prediction = model.predict(image_array, verbose=0)
+    result_index = int(np.argmax(prediction[0]))
+    confidence = float(np.max(prediction[0])) * 100
+
+    return result_index, confidence
 
 
-#Tensorflow Model Prediction
-def model_prediction(test_image):
-    model = tf.keras.models.load_model('trained_model.h5', compile=False)
-    image = tf.keras.preprocessing.image.load_img(test_image,target_size=(128, 128))
-    input_arr = tf.keras.preprocessing.image.img_to_array(image)
-    input_arr = np.array([input_arr]) #Convert single image to a batch
-    prediction = model.predict(input_arr)
-    result_index = np.argmax(prediction)
-    return result_index
+# -------------------- Disease Classes --------------------
 
-#Sidebar
-st.sidebar.title("Dashboard")
-app_mode = st.sidebar.selectbox("Select Page",["Home","About","Disease Recognition"])
-
-#Home Page
-if(app_mode=="Home"):
-    st.header("PLANT DISEASE RECOGNITION SYSTEM")
-    image_path = "home_page.jpeg"
-    st.image(image_path,use_column_width=True)
-    st.markdown("""
-    Welcome to the Plant Disease Recognition System! 🌿🔍
-    
-    Our mission is to help in identifying plant diseases efficiently. Upload an image of a plant, and our system will analyze it to detect any signs of diseases. Together, let's protect our crops and ensure a healthier harvest!
-
-    ### How It Works
-    1. **Upload Image:** Go to the **Disease Recognition** page and upload an image of a plant with suspected diseases.
-    2. **Analysis:** Our system will process the image using advanced algorithms to identify potential diseases.
-    3. **Results:** View the results and recommendations for further action.
-
-    ### Why Choose Us?
-    - **Accuracy:** Our system utilizes state-of-the-art machine learning techniques for accurate disease detection.
-    - **User-Friendly:** Simple and intuitive interface for seamless user experience.
-    - **Fast and Efficient:** Receive results in seconds, allowing for quick decision-making.
-
-    ### Get Started
-    Click on the **Disease Recognition** page in the sidebar to upload an image and experience the power of our Plant Disease Recognition System!
-
-    ### About Us
-    Learn more about the project, our team, and our goals on the **About** page.
-""")
-
-#About Page
-elif(app_mode=="About"):
-    st.header("About")
-    st.markdown("""
-    #### About Dataset
-    This dataset is recreated using offline augmentation from the original dataset. The original dataset can be found on this github repo. This dataset consists of about 87K rgb images of healthy and diseased crop leaves which is categorized into 38 different classes. The total dataset is divided into 80/20 ratio of training and validation set preserving the directory structure. A new directory containing 33 test images is created later for prediction purpose.
-    #### Content
-    1. Train (70295 images)
-    2. Valid (17572 image)
-    3. Test (33 images)
-""")
-    
-#Prediction Page
-elif(app_mode=="Disease Recognition"):
-    st.header("Disease Recognition")
-    test_image = st.file_uploader("Choose an Image:")
-    if(st.button("Show Image")):
-        st.image(test_image,use_column_width=True)
-    #Predict Button
-    if(st.button("Predict")):
-        with st.spinner("Please Wait.."):
-            st.write("Our Prediction")
-            result_index = model_prediction(test_image)
-            #Define Class
-            class_name = ['Apple___Apple_scab',
+class_name = [
+    'Apple___Apple_scab',
     'Apple___Black_rot',
     'Apple___Cedar_apple_rust',
     'Apple___healthy',
@@ -128,5 +106,117 @@ elif(app_mode=="Disease Recognition"):
     'Tomato___Target_Spot',
     'Tomato___Tomato_Yellow_Leaf_Curl_Virus',
     'Tomato___Tomato_mosaic_virus',
-    'Tomato___healthy']
-        st.success("Model is Predicting it's a {}".format(class_name[result_index]))
+    'Tomato___healthy'
+]
+
+
+# -------------------- Sidebar --------------------
+
+st.sidebar.title("🌿 AgriShield")
+st.sidebar.write("Plant Disease Detection")
+app_mode = st.sidebar.selectbox(
+    "Select Page",
+    ["Home", "About", "Disease Recognition"]
+)
+
+
+# -------------------- Home Page --------------------
+
+if app_mode == "Home":
+    st.title("🌿 AgriShield")
+    st.subheader("Plant Disease Detection and Preventive Measures")
+
+    image_path = "home_page.jpeg"
+
+    if os.path.exists(image_path):
+        st.image(image_path, use_container_width=True)
+
+    st.markdown("""
+    Welcome to **AgriShield**, a plant disease recognition system
+    designed to help identify possible diseases from plant leaf images.
+
+    ### How It Works
+    1. **Upload:** Choose an image of a plant leaf.
+    2. **Analyze:** Our trained deep-learning model analyzes the image.
+    3. **Identify:** View the predicted plant disease.
+
+    ### Why AgriShield?
+    - Quick image-based disease prediction
+    - Simple and user-friendly interface
+    - Supports 38 plant health and disease categories
+
+    **Note:** Predictions are model estimates, not a substitute for
+    expert agricultural advice. Confirm important decisions with a
+    qualified agricultural specialist.
+    """)
+
+
+# -------------------- About Page --------------------
+
+elif app_mode == "About":
+    st.title("About AgriShield")
+
+    st.markdown("""
+    AgriShield is a machine-learning project that uses a
+    Convolutional Neural Network (CNN) to classify plant leaf images.
+
+    ### Dataset Information
+    - Training images: 70,295
+    - Validation images: 17,572
+    - Categories: 38
+    - Input image size: 128 × 128 pixels
+
+    ### Technology Used
+    - Python
+    - TensorFlow and Keras
+    - Convolutional Neural Network (CNN)
+    - NumPy
+    - Streamlit
+
+    ### Project Goal
+    To help users recognize possible plant diseases from leaf images
+    and encourage timely consultation and appropriate crop care.
+    """)
+
+
+# -------------------- Disease Recognition Page --------------------
+
+elif app_mode == "Disease Recognition":
+    st.title("🔍 Plant Disease Recognition")
+
+    st.write("Upload a clear image of a plant leaf to predict its category.")
+
+    test_image = st.file_uploader(
+        "Choose a plant leaf image",
+        type=["jpg", "jpeg", "png"]
+    )
+
+    if test_image is not None:
+        st.image(
+            test_image,
+            caption="Uploaded plant image",
+            use_container_width=True
+        )
+
+        if st.button("Predict Disease", type="primary"):
+            try:
+                with st.spinner("Analyzing the image..."):
+                    result_index, confidence = model_prediction(test_image)
+
+                st.success(
+                    f"Prediction: {class_name[result_index].replace('___', ' - ').replace('_', ' ')}"
+                )
+                st.write(f"Model confidence: {confidence:.2f}%")
+
+                st.info(
+                    "This is an AI-generated prediction. Image quality, "
+                    "lighting, and unfamiliar field conditions can affect "
+                    "results. Please verify the diagnosis before taking action."
+                )
+
+            except Exception as error:
+                st.error(
+                    "Prediction could not be completed. Please check the "
+                    "model download and deployment logs."
+                )
+                st.caption(f"Technical details: {error}")
