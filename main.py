@@ -1,6 +1,30 @@
+
 import streamlit as st
 import tensorflow as tf
 import numpy as np
+import gdown
+import os
+
+MODEL_PATH = "trained_model.h5"
+MODEL_URL = "https://drive.google.com/uc?id=1YNIs92QlZIJP0YQ2e5jGWUAuEWgFR_lE"
+
+@st.cache_resource
+def load_model():
+    if not os.path.exists(MODEL_PATH):
+        gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
+    return tf.keras.models.load_model(MODEL_PATH, compile=False)
+
+# TensorFlow Model Prediction
+def model_prediction(test_image):
+    model = load_model()
+    image = tf.keras.preprocessing.image.load_img(
+        test_image, target_size=(128, 128)
+    )
+    input_arr = tf.keras.preprocessing.image.img_to_array(image)
+    input_arr = np.array([input_arr])
+    prediction = model.predict(input_arr)
+    return np.argmax(prediction)
+
 
 #Tensorflow Model Prediction
 def model_prediction(test_image):
