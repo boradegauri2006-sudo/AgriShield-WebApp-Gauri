@@ -1,4 +1,3 @@
-
 import os
 import gdown
 import streamlit as st
@@ -25,6 +24,7 @@ MODEL_URL = (
     "id=1YNIs92QlZIJP0YQ2e5jGWUAuEWgFR_lE"
 )
 
+# Order must match the training notebook's class_names (alphabetical folders)
 CLASS_NAMES = [
     "Apple___Apple_scab",
     "Apple___Black_rot",
@@ -65,6 +65,9 @@ CLASS_NAMES = [
     "Tomato___Tomato_mosaic_virus",
     "Tomato___healthy"
 ]
+
+# Indexes of the tomato classes only (this app is tomato-only)
+TOMATO_IDX = [i for i, c in enumerate(CLASS_NAMES) if c.startswith("Tomato")]
 
 TOMATO_DISEASES = {
     "Tomato___Bacterial_spot": {
@@ -158,8 +161,9 @@ def prepare_image(image):
     image = image.convert("RGB")
     image = image.resize((128, 128))
 
+    # IMPORTANT: the model was trained on raw 0-255 pixels,
+    # so do NOT divide by 255 here.
     image_array = np.array(image, dtype=np.float32)
-    image_array = image_array / 255.0
     image_array = np.expand_dims(image_array, axis=0)
 
     return image_array
@@ -169,9 +173,13 @@ def predict_disease(model, image):
     processed_image = prepare_image(image)
     predictions = model.predict(processed_image, verbose=0)[0]
 
-    index = int(np.argmax(predictions))
-    predicted_class = CLASS_NAMES[index]
-    confidence = float(predictions[index])
+    # Tomato-only: look only at tomato classes and renormalize
+    probs = predictions[TOMATO_IDX]
+    probs = probs / probs.sum()
+
+    best = int(np.argmax(probs))
+    predicted_class = CLASS_NAMES[TOMATO_IDX[best]]
+    confidence = float(probs[best])
 
     return predicted_class, confidence
 
@@ -182,8 +190,7 @@ def show_disease_info(predicted_class):
     if info is None:
         st.warning(
             "The model's top prediction is not a tomato category. "
-            "Try a clear tomato leaf image. The model can still "
-            "misclassify images from other plants."
+            "Try a clear tomato leaf image."
         )
         return
 
@@ -343,14 +350,6 @@ elif page == "Disease Detection":
             with right:
                 st.markdown("### Analysis Result")
 
-                # TEMPORARY DEBUG OUTPUT
-                st.write("Debug predicted class:", predicted_class)
-                st.write(
-                    "Debug confidence:",
-                    round(confidence * 100, 2),
-                    "%"
-                )
-
                 st.metric(
                     "Model confidence",
                     f"{confidence * 100:.2f}%"
@@ -494,9 +493,9 @@ elif page == "About Project":
 
     st.write(
         "The model was trained on a dataset containing multiple "
-        "plant categories, even though this website presents only "
-        "tomato-related results. It can incorrectly classify images, "
-        "so predictions should be verified before acting on them."
+        "plant categories, but this website only reports tomato "
+        "results. It can still misclassify images, so predictions "
+        "should be verified before acting on them."
     )
 
     st.caption(
