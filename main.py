@@ -413,18 +413,18 @@ WEEKLY_ROUTINE = [
 # --------------------------------------------------
 CSS = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Instrument+Sans:wght@400;500;600&display=swap');
 
 :root {
-  --ink: #17241B;
-  --muted: #55645A;
-  --leaf: #2E6A3E;
-  --leaf-deep: #173A24;
-  --sage: #E4ECDD;
-  --paper: #F7F9F4;
+  --ink: #10231A;
+  --forest: #0E2C1F;
+  --moss: #2E6A3E;
+  --mint: #CFE3D3;
+  --paper: #F5F7F4;
   --card: #FFFFFF;
-  --line: #D5DFCC;
-  --tomato: #D23B2A;
+  --line: #DCE3DC;
+  --muted: #5B6B61;
+  --accent: #D8402F;
 }
 
 html, body, .stApp {
@@ -433,93 +433,155 @@ html, body, .stApp {
   font-family: 'Instrument Sans', system-ui, sans-serif;
 }
 .stApp p, .stApp li, .stApp span, .stApp label, .stApp div { color: inherit; }
-.stApp h1, .stApp h2, .stApp h3, .stApp h4 {
-  font-family: 'Bricolage Grotesque', 'Instrument Sans', sans-serif;
+.stApp h1, .stApp h2, .stApp h3, .stApp h4, .ag-display {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 500;
   color: var(--ink);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
 }
 
 #MainMenu, footer, header[data-testid="stHeader"], [data-testid="stSidebar"],
 [data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] { display: none !important; }
 
 .block-container {
-  max-width: 1080px;
-  padding: 1.4rem 1.4rem 4rem 1.4rem !important;
+  max-width: 1120px;
+  padding: 1.2rem 1.6rem 3rem 1.6rem !important;
 }
 
 /* top bar */
-.ag-brand { display:flex; align-items:center; gap:.6rem; font-family:'Bricolage Grotesque',sans-serif;
-  font-weight:800; font-size:1.35rem; color:var(--leaf-deep); }
-.ag-brand .dot { width:.8rem; height:.8rem; border-radius:50%; background:var(--tomato); display:inline-block; }
+.ag-brand { display:flex; align-items:center; gap:.65rem; font-family:'Fraunces',Georgia,serif;
+  font-weight:600; font-size:1.4rem; color:var(--forest); letter-spacing:-0.01em; }
+.ag-rule { height:1px; background:var(--line); margin:.1rem 0 2rem 0; }
 
-/* navigation pills (the horizontal radio) */
-div[data-testid="stRadio"] > label { display:none !important; }
-div[data-testid="stRadio"] div[role="radiogroup"] { gap:.4rem; flex-wrap:wrap; }
-div[data-testid="stRadio"] div[role="radiogroup"] > label {
-  background: transparent; border:1px solid var(--line); border-radius:999px;
-  padding:.35rem .95rem; cursor:pointer; margin:0 !important;
+.st-key-nav [data-testid^="stBaseButton"], .st-key-nav button {
+  background: transparent !important; border: none !important; border-radius: 0 !important;
+  border-bottom: 2px solid transparent !important; box-shadow: none !important;
+  padding: .55rem .1rem !important; min-height: 0 !important;
 }
-div[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child { display:none !important; }
-div[data-testid="stRadio"] div[role="radiogroup"] > label p { font-weight:500; font-size:.95rem; margin:0; }
-div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {
-  background: var(--leaf-deep); border-color: var(--leaf-deep);
+.st-key-nav [data-testid^="stBaseButton"] p, .st-key-nav button p {
+  color: var(--muted) !important; font-weight: 500; font-size: .97rem;
 }
-div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) p { color:#fff !important; }
-div[data-testid="stRadio"] div[role="radiogroup"] > label:focus-within { outline:2px solid var(--leaf); outline-offset:2px; }
+.st-key-nav [data-testid^="stBaseButton"]:hover p, .st-key-nav button:hover p { color: var(--ink) !important; }
+.st-key-nav [data-testid="stBaseButton-primary"], .st-key-nav button[kind="primary"] {
+  border-bottom: 2px solid var(--ink) !important;
+}
+.st-key-nav [data-testid="stBaseButton-primary"] p, .st-key-nav button[kind="primary"] p {
+  color: var(--ink) !important; font-weight: 600;
+}
 
 /* hero */
-.ag-hero { background: var(--leaf-deep); border-radius: 22px; padding: 3rem 2.4rem 2.4rem 2.4rem; margin: 1.2rem 0 1.4rem 0; }
-.ag-hero h1 { color:#F4F8EE !important; font-weight:800; font-size:clamp(2.1rem, 5vw, 3.4rem); line-height:1.05; margin:0 0 1rem 0; max-width:16ch; }
-.ag-hero p { color:#C9D9C8 !important; font-size:1.1rem; line-height:1.55; max-width:56ch; margin:0 0 1.6rem 0; }
-.ag-chips { display:flex; flex-wrap:wrap; gap:.45rem; }
-.ag-chip { font-size:.85rem; font-weight:500; padding:.25rem .7rem; border-radius:999px; background:rgba(255,255,255,.1); color:#E6EFE0 !important; border:1px solid rgba(255,255,255,.18); }
-.ag-chip.alert { background:var(--tomato); border-color:var(--tomato); color:#fff !important; }
+.ag-hero-text h1 { font-size: clamp(2.2rem, 4.6vw, 3.5rem); line-height: 1.08; margin: .2rem 0 1.1rem 0; max-width: 15ch; }
+.ag-hero-text p { color: var(--muted) !important; font-size: 1.1rem; line-height: 1.6; max-width: 44ch; margin: 0 0 1.4rem 0; }
+.ag-panel { background: radial-gradient(circle at 30% 20%, #1D4E37 0%, #0E2C1F 72%); border-radius: 20px; padding: 1.2rem 1.2rem .6rem 1.2rem; }
+.ag-panel svg { width: 100%; height: auto; display: block; }
+.ag-cap { color: #9DB8A5 !important; font-size: .8rem; text-align: right; margin: .2rem .2rem .4rem 0; }
+
+.st-key-cta1 [data-testid^="stBaseButton"], .st-key-cta1 button {
+  background: var(--forest) !important; border: 1px solid var(--forest) !important;
+  border-radius: 10px !important; padding: .7rem 1.2rem !important;
+}
+.st-key-cta1 button p, .st-key-cta1 [data-testid^="stBaseButton"] p { color: #fff !important; font-weight: 600; }
+.st-key-cta1 button:hover { background: var(--moss) !important; border-color: var(--moss) !important; }
+.st-key-cta2 [data-testid^="stBaseButton"], .st-key-cta2 button {
+  background: transparent !important; border: 1px solid var(--ink) !important;
+  border-radius: 10px !important; padding: .7rem 1.2rem !important;
+}
+.st-key-cta2 button p, .st-key-cta2 [data-testid^="stBaseButton"] p { color: var(--ink) !important; font-weight: 600; }
+.st-key-cta2 button:hover { background: var(--mint) !important; }
+
+.ag-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin: 2.6rem 0 .4rem 0; }
+.ag-stats > div { border-top: 1px solid var(--ink); padding-top: .8rem; }
+.ag-stats b { display: block; font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: 2rem; letter-spacing: -0.02em; }
+.ag-stats span { color: var(--muted) !important; font-size: .92rem; }
 
 /* section headings */
-.ag-h2 { font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:1.6rem; margin:2.2rem 0 .3rem 0; }
-.ag-sub { color:var(--muted); margin:0 0 1rem 0; max-width:62ch; line-height:1.55; }
+.ag-h2 { font-family:'Fraunces',Georgia,serif; font-weight:500; font-size:1.9rem; letter-spacing:-0.015em; margin:2.8rem 0 .4rem 0; }
+.ag-sub { color:var(--muted) !important; margin:0 0 1.2rem 0; max-width:62ch; line-height:1.6; }
+
+/* how it works */
+.ag-step2 { border-top: 1px solid var(--line); padding-top: 1rem; }
+.ag-step2 .n { font-family:'Fraunces',Georgia,serif; font-size:2.4rem; color:var(--moss) !important; line-height:1; }
+.ag-step2 h4 { margin: .6rem 0 .3rem 0; font-size:1.2rem; }
+.ag-step2 p { color:var(--muted) !important; margin:0; line-height:1.55; }
 
 /* cards */
-.ag-card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:1.1rem 1.2rem; }
-.ag-card h4 { margin:0 0 .35rem 0; font-size:1.1rem; }
-.ag-card p { margin:0; color:var(--muted); line-height:1.5; font-size:.97rem; }
+.ag-card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:1.2rem 1.3rem; }
+.ag-card h4 { margin:0 0 .4rem 0; font-size:1.2rem; }
+.ag-card p { margin:0; color:var(--muted) !important; line-height:1.55; font-size:.97rem; }
 .ag-card ul { margin:.5rem 0 0 0; padding-left:1.1rem; color:var(--ink); }
-.ag-card li { margin:.25rem 0; line-height:1.45; font-size:.96rem; }
-.ag-step { display:flex; gap:.9rem; align-items:flex-start; }
-.ag-step .n { flex:0 0 2rem; height:2rem; border-radius:50%; background:var(--sage); color:var(--leaf-deep) !important; font-weight:700; display:flex; align-items:center; justify-content:center; font-family:'Bricolage Grotesque',sans-serif; }
+.ag-card li { margin:.3rem 0; line-height:1.5; font-size:.96rem; }
+.ag-kind { font-size:.82rem; font-weight:600; }
 
 /* tags */
-.ag-tag { display:inline-block; font-size:.8rem; font-weight:600; padding:.15rem .6rem; border-radius:999px; margin-right:.35rem; }
-.ag-urg { display:inline-flex; align-items:center; gap:.35rem; font-size:.82rem; color:var(--muted); }
-.ag-urg i { width:.6rem; height:.6rem; border-radius:50%; display:inline-block; }
+.ag-tag { display:inline-block; font-size:.78rem; font-weight:600; padding:.12rem .55rem; border-radius:6px; margin-right:.5rem; }
+.ag-urg { display:inline-flex; align-items:center; gap:.35rem; font-size:.82rem; color:var(--muted) !important; }
+.ag-urg i { width:.55rem; height:.55rem; border-radius:50%; display:inline-block; }
 
 /* result card */
-.ag-result { background:var(--card); border:1px solid var(--line); border-left:8px solid var(--leaf); border-radius:14px; padding:1.3rem 1.4rem; }
-.ag-result h2 { margin:.4rem 0 .2rem 0; font-size:1.9rem; }
-.ag-bar { background:var(--sage); border-radius:999px; height:.6rem; overflow:hidden; margin:.3rem 0 .9rem 0; }
-.ag-bar > span { display:block; height:100%; background:var(--leaf); border-radius:999px; }
+.ag-result { background:var(--card); border:1px solid var(--line); border-top:5px solid var(--moss); border-radius:12px; padding:1.4rem 1.5rem; }
+.ag-result h2 { margin:.5rem 0 .3rem 0; font-size:2rem; }
+.ag-bar { background:#E7ECE6; border-radius:999px; height:.5rem; overflow:hidden; margin:.35rem 0 1rem 0; }
+.ag-bar > span { display:block; height:100%; background:var(--moss); border-radius:999px; }
 .ag-row { display:flex; justify-content:space-between; font-size:.92rem; color:var(--muted); }
-.ag-note { background:#FBF1D9; border:1px solid #EBD79F; color:#5E4410 !important; border-radius:12px; padding:.8rem 1rem; margin:.8rem 0; font-size:.95rem; line-height:1.5; }
-.ag-note.bad { background:#FBE4E0; border-color:#EDB5AC; color:#7A2318 !important; }
+.ag-note { background:#FBF3DE; border:1px solid #EBD79F; color:#5E4410 !important; border-radius:10px; padding:.8rem 1rem; margin:.8rem 0; font-size:.95rem; line-height:1.5; }
+.ag-note.bad { background:#FBE8E4; border-color:#EDB5AC; color:#7A2318 !important; }
 
-/* buttons */
-.stButton > button { border-radius:999px; border:1px solid var(--leaf-deep); background:var(--leaf-deep); color:#fff; font-weight:600; padding:.55rem 1.3rem; }
-.stButton > button:hover { background:var(--leaf); border-color:var(--leaf); color:#fff; }
-.stButton > button p { color:#fff !important; }
-.stButton > button:focus-visible { outline:2px solid var(--tomato); outline-offset:2px; }
+/* footer */
+.ag-footer { border-top:1px solid var(--line); margin-top:3.5rem; padding-top:1.1rem; color:var(--muted) !important;
+  font-size:.85rem; display:flex; justify-content:space-between; flex-wrap:wrap; gap:.6rem; }
 
 /* uploader and expanders */
-[data-testid="stFileUploader"] section { background:var(--card); border:1.5px dashed var(--leaf); border-radius:14px; }
+[data-testid="stFileUploader"] section { background:var(--card); border:1.5px dashed var(--moss); border-radius:12px; }
 [data-testid="stExpander"] { background:var(--card); border:1px solid var(--line) !important; border-radius:12px; }
 [data-testid="stExpander"] summary p { font-weight:600; }
 button[data-baseweb="tab"] p { font-weight:600; }
 
 @media (max-width: 700px) {
-  .ag-hero { padding: 2rem 1.3rem 1.6rem 1.3rem; }
+  .ag-stats { grid-template-columns: 1fr; gap: 1rem; }
   .block-container { padding: 1rem .9rem 3rem .9rem !important; }
 }
 </style>
 """
+
+BRAND_HTML = (
+    '<div class="ag-brand">'
+    '<svg width="30" height="30" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+    '<rect width="32" height="32" rx="9" fill="#0E2C1F"/>'
+    '<path d="M16 26C9 22 8 14 12 10C14 8 15 7 16 5C17 7 18 8 20 10C24 14 23 22 16 26Z" fill="#7FBF93"/>'
+    '<path d="M16 25V11" stroke="#0E2C1F" stroke-width="1.4"/>'
+    '<circle cx="23" cy="9" r="3" fill="#D8402F"/></svg>AgriShield</div>'
+)
+
+HERO_SVG = (
+    '<svg viewBox="0 0 440 460" xmlns="http://www.w3.org/2000/svg" role="img" '
+    'aria-label="A tomato leaf being scanned, with a disease spot marked">'
+    '<defs><linearGradient id="lf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3F8A5A"/>'
+    '<stop offset="1" stop-color="#1F5236"/></linearGradient>'
+    '<linearGradient id="sc" x1="0" x2="1"><stop offset="0" stop-color="#7FBF93" stop-opacity="0"/>'
+    '<stop offset=".5" stop-color="#7FBF93"/><stop offset="1" stop-color="#7FBF93" stop-opacity="0"/></linearGradient></defs>'
+    '<g stroke="#CFE3D3" stroke-width="2.5" fill="none" stroke-linecap="round">'
+    '<path d="M40 90V50H80"/><path d="M360 50H400V90"/><path d="M40 370V410H80"/><path d="M360 410H400V370"/></g>'
+    '<path d="M200 395C112 345 86 236 140 150C166 108 190 88 200 56C210 88 234 108 260 150C314 236 288 345 200 395Z" '
+    'fill="url(#lf)" stroke="#8FC79F" stroke-width="2"/>'
+    '<path d="M200 395V66" stroke="#A9D6B6" stroke-width="2.5"/>'
+    '<g stroke="#A9D6B6" stroke-width="1.6" stroke-linecap="round" opacity=".8">'
+    '<path d="M200 330L146 284"/><path d="M200 330L254 284"/><path d="M200 266L140 218"/>'
+    '<path d="M200 266L260 218"/><path d="M200 200L158 160"/><path d="M200 200L242 160"/></g>'
+    '<circle cx="236" cy="268" r="26" fill="none" stroke="#E0B867" stroke-width="2" stroke-dasharray="4 4"/>'
+    '<circle cx="236" cy="268" r="14" fill="#6E4A1F"/><circle cx="236" cy="268" r="6" fill="#3E2A10"/>'
+    '<circle cx="150" cy="232" r="7" fill="#6E4A1F" opacity=".85"/>'
+    '<rect x="60" y="205" width="320" height="2" fill="url(#sc)"/>'
+    '<path d="M262 268H318" stroke="#E7F1E8" stroke-width="1.6"/><circle cx="262" cy="268" r="4" fill="#D8402F"/>'
+    '<rect x="318" y="244" width="104" height="48" rx="10" fill="#F5F7F4"/>'
+    '<text x="332" y="264" font-family="Instrument Sans, sans-serif" font-size="13" font-weight="600" fill="#10231A">Early blight</text>'
+    '<text x="332" y="282" font-family="Instrument Sans, sans-serif" font-size="12" fill="#5B6B61">91% confidence</text>'
+    '</svg>'
+)
+
+FOOTER_HTML = (
+    '<div class="ag-footer"><span>AgriShield is an educational student project.</span>'
+    '<span>Results are AI predictions, not a diagnosis. Check with a local agriculture expert before treating plants.</span></div>'
+)
 
 
 def tag(kind):
@@ -638,7 +700,7 @@ def result_card(ranked, tomato_share):
         )
 
     html = (
-        f'<div class="ag-result" style="border-left-color:{color}">'
+        f'<div class="ag-result" style="border-top-color:{color}">'
         f'{tag(info["kind"])}{urgency(info["urgency"])}'
         f'<h2>{info["name"]}</h2>'
         f'<p class="ag-sub" style="margin-bottom:.9rem">{info["summary"]}</p>'
@@ -670,11 +732,22 @@ def go_to(page):
 
 st.markdown(CSS, unsafe_allow_html=True)
 
-top_left, top_right = st.columns([1, 3])
-with top_left:
-    st.markdown('<div class="ag-brand"><span class="dot"></span>AgriShield</div>', unsafe_allow_html=True)
-with top_right:
-    st.radio("Navigation", PAGES, key="page_choice", horizontal=True)
+with st.container(key="nav"):
+    nav_cols = st.columns([2.4, 1, 1.25, 1.25, 1.1, 0.9], vertical_alignment="center")
+    with nav_cols[0]:
+        st.markdown(BRAND_HTML, unsafe_allow_html=True)
+    for col, name in zip(nav_cols[1:], PAGES):
+        with col:
+            st.button(
+                name,
+                key=f"nav_{name}",
+                on_click=go_to,
+                args=(name,),
+                type="primary" if st.session_state["page_choice"] == name else "secondary",
+                use_container_width=True,
+            )
+
+st.markdown('<div class="ag-rule"></div>', unsafe_allow_html=True)
 
 page = st.session_state["page_choice"]
 
@@ -682,25 +755,35 @@ page = st.session_state["page_choice"]
 # HOME
 # --------------------------------------------------
 if page == "Home":
-    chips = "".join(
-        f'<span class="ag-chip{" alert" if v["urgency"] == "High" else ""}">{v["name"]}</span>'
-        for k, v in TOMATO_DISEASES.items() if k != "Tomato___healthy"
-    )
+    hero_left, hero_right = st.columns([1.1, 1], gap="large", vertical_alignment="center")
+
+    with hero_left:
+        st.markdown(
+            '<div class="ag-hero-text"><h1>Spot tomato leaf disease from a single photo</h1>'
+            '<p>Upload a photo of a leaf. AgriShield names the most likely problem from nine common tomato '
+            'diseases and pests, then explains what to do next and how to prevent it.</p></div>',
+            unsafe_allow_html=True,
+        )
+        b1, b2 = st.columns(2)
+        with b1:
+            st.button("Check a leaf", key="cta1", on_click=go_to, args=("Check a leaf",), use_container_width=True)
+        with b2:
+            st.button("Read the disease guide", key="cta2", on_click=go_to, args=("Disease guide",), use_container_width=True)
+
+    with hero_right:
+        st.markdown(
+            f'<div class="ag-panel">{HERO_SVG}<p class="ag-cap">Example of a result</p></div>',
+            unsafe_allow_html=True,
+        )
+
     st.markdown(
-        '<div class="ag-hero">'
-        '<h1>Check a tomato leaf in seconds</h1>'
-        '<p>Upload a photo of a tomato leaf and AgriShield tells you which of nine common problems it most '
-        'likely shows, what to do next, and how to stop it coming back.</p>'
-        f'<div class="ag-chips">{chips}</div>'
+        '<div class="ag-stats">'
+        '<div><b>9</b><span>tomato diseases and pests covered</span></div>'
+        '<div><b>70,000+</b><span>leaf images used to train the model</span></div>'
+        '<div><b>93%+</b><span>accuracy on held-out validation images</span></div>'
         '</div>',
         unsafe_allow_html=True,
     )
-
-    b1, b2, _ = st.columns([1, 1, 2])
-    with b1:
-        st.button("Check a leaf", on_click=go_to, args=("Check a leaf",), use_container_width=True)
-    with b2:
-        st.button("Read the disease guide", on_click=go_to, args=("Disease guide",), use_container_width=True)
 
     heading("How it works")
     steps = [
@@ -708,27 +791,28 @@ if page == "Home":
         ("2", "Upload it", "Add the photo on the Check a leaf page, or use your phone camera."),
         ("3", "Read the result", "See the likely disease, how sure the model is, and what to do about it."),
     ]
-    cols = st.columns(3)
+    cols = st.columns(3, gap="large")
     for col, (n, title, text) in zip(cols, steps):
         with col:
             st.markdown(
-                f'<div class="ag-card"><div class="ag-step"><div class="n">{n}</div>'
-                f'<div><h4>{title}</h4><p>{text}</p></div></div></div>',
+                f'<div class="ag-step2"><div class="n">{n}</div><h4>{title}</h4><p>{text}</p></div>',
                 unsafe_allow_html=True,
             )
 
     heading(
-        "Know what you are looking at",
-        "A quick look at the problems AgriShield can recognise. Open the Disease guide for causes, prevention and treatment.",
+        "What AgriShield can recognise",
+        "Open the Disease guide for causes, symptoms, treatment and prevention.",
     )
     items = [(k, v) for k, v in TOMATO_DISEASES.items() if k != "Tomato___healthy"]
     for row in range(0, len(items), 3):
-        cols = st.columns(3)
+        cols = st.columns(3, gap="large")
         for col, (_, info) in zip(cols, items[row:row + 3]):
+            fg, _bg = KIND_COLORS[info["kind"]]
             with col:
                 st.markdown(
-                    f'<div class="ag-card">{tag(info["kind"])}'
-                    f'<h4 style="margin-top:.6rem">{info["name"]}</h4>'
+                    f'<div class="ag-card" style="border-top:3px solid {fg}">'
+                    f'<span class="ag-kind" style="color:{fg}">{info["kind"]}</span>'
+                    f'<h4 style="margin-top:.35rem">{info["name"]}</h4>'
                     f'<p>{info["summary"]}</p></div>',
                     unsafe_allow_html=True,
                 )
@@ -798,11 +882,11 @@ elif page == "Disease guide":
     heading(
         "Tomato disease guide",
         "Nine common problems on tomato leaves: what causes them, what they look like, and what to do. "
-        "Open any card for the full details.",
+        "Open any card for the full details. Urgency shows how quickly to act: low can wait for routine care, high needs action within days.",
     )
 
     kinds = ["All", "Fungal", "Bacterial", "Viral", "Pest"]
-    choice = st.radio("Filter by cause", kinds, horizontal=True, key="kind_filter")
+    choice = st.segmented_control("Filter by cause", kinds, default="All", key="kind_filter") or "All"
 
     shown = [
         (k, v) for k, v in TOMATO_DISEASES.items()
@@ -922,3 +1006,5 @@ elif page == "About":
         'not a diagnosis. Please confirm with an agriculture expert before treating plants.</div>',
         unsafe_allow_html=True,
     )
+
+st.markdown(FOOTER_HTML, unsafe_allow_html=True)
