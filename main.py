@@ -6,23 +6,25 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image
 
-# ==================================================
-# 1. PAGE CONFIGURATION
-# ==================================================
+# --------------------------------------------------
+# PAGE CONFIGURATION
+# --------------------------------------------------
 st.set_page_config(
-    page_title="AgriShield | Tomato Health Assistant",
-    page_icon="🍅",
+    page_title="AgriShield | Tomato Disease Detection",
+    page_icon="🌱",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# ==================================================
-# 2. MODEL CONFIGURATION
-# ==================================================
+# --------------------------------------------------
+# MODEL CONFIGURATION
+# --------------------------------------------------
 MODEL_PATH = "trained_model.h5"
-MODEL_URL = "https://drive.google.com/uc?id=1YNIs92QlZIJP0YQ2e5jGWUAuEWgFR_lE"
+MODEL_URL = (
+    "https://drive.google.com/uc?"
+    "id=1YNIs92QlZIJP0YQ2e5jGWUAuEWgFR_lE"
+)
 
-# IMPORTANT: Keep the original training class order unchanged.
 CLASS_NAMES = [
     "Apple___Apple_scab",
     "Apple___Black_rot",
@@ -61,318 +63,79 @@ CLASS_NAMES = [
     "Tomato___Target_Spot",
     "Tomato___Tomato_Yellow_Leaf_Curl_Virus",
     "Tomato___Tomato_mosaic_virus",
-    "Tomato___healthy",
+    "Tomato___healthy"
 ]
 
-# ==================================================
-# 3. TOMATO DISEASE INFORMATION
-# ==================================================
-DISEASE_INFO = {
+TOMATO_DISEASES = {
     "Tomato___Bacterial_spot": {
         "name": "Bacterial Spot",
-        "type": "Bacterial disease",
-        "symptoms": (
-            "Small dark spots may appear on leaves, sometimes with "
-            "yellow areas around them."
-        ),
-        "care": [
-            "Avoid wetting the leaves while watering.",
-            "Remove affected plant material when appropriate.",
-            "Keep plants spaced to improve airflow.",
-            "Ask a local agricultural expert about suitable management."
-        ]
+        "symptoms": "Small dark spots may appear on leaves and stems.",
+        "advice": "Avoid overhead watering, keep foliage dry, and seek local agricultural advice."
     },
     "Tomato___Early_blight": {
         "name": "Early Blight",
-        "type": "Fungal disease",
-        "symptoms": (
-            "Brown spots with ring-like patterns may develop, often "
-            "on older leaves."
-        ),
-        "care": [
-            "Remove badly affected leaves when appropriate.",
-            "Water near the soil instead of over the leaves.",
-            "Use mulch to reduce soil splashing.",
-            "Follow local agricultural guidance for disease management."
-        ]
+        "symptoms": "Brown spots, sometimes with ring-like patterns, may appear on older leaves.",
+        "advice": "Remove affected leaves carefully, avoid wetting foliage, and maintain good spacing."
     },
     "Tomato___Late_blight": {
         "name": "Late Blight",
-        "type": "Oomycete disease",
-        "symptoms": (
-            "Irregular, water-soaked-looking patches may spread quickly "
-            "in cool, damp conditions."
-        ),
-        "care": [
-            "Check nearby plants for similar symptoms.",
-            "Avoid prolonged leaf wetness.",
-            "Seek prompt advice from an agricultural specialist.",
-            "Follow local guidance on appropriate control measures."
-        ]
+        "symptoms": "Dark, spreading patches can develop on leaves and stems.",
+        "advice": "Separate affected plants where practical and promptly consult an agricultural expert."
     },
     "Tomato___Leaf_Mold": {
         "name": "Leaf Mold",
-        "type": "Fungal disease",
-        "symptoms": (
-            "Pale yellow patches may appear on the upper leaf surface, "
-            "with mold-like growth underneath."
-        ),
-        "care": [
-            "Improve airflow around plants.",
-            "Avoid excessive humidity and leaf wetness.",
-            "Remove affected plant material when appropriate.",
-            "Keep growing areas clean."
-        ]
+        "symptoms": "Yellow patches may develop on upper leaf surfaces, with mold underneath.",
+        "advice": "Improve air circulation, avoid excess moisture, and water near the soil."
     },
     "Tomato___Septoria_leaf_spot": {
         "name": "Septoria Leaf Spot",
-        "type": "Fungal disease",
-        "symptoms": (
-            "Many small, round spots with pale centres and darker "
-            "edges may appear on leaves."
-        ),
-        "care": [
-            "Remove badly affected lower leaves when appropriate.",
-            "Avoid splashing soil onto foliage.",
-            "Water at the base of the plant.",
-            "Clean tools after working with affected plants."
-        ]
+        "symptoms": "Small circular spots with pale centers may appear on leaves.",
+        "advice": "Remove badly affected leaves, reduce leaf wetness, and clean garden tools."
     },
     "Tomato___Spider_mites Two-spotted_spider_mite": {
         "name": "Two-Spotted Spider Mites",
-        "type": "Pest damage",
-        "symptoms": (
-            "Fine pale speckles, yellowing and sometimes delicate "
-            "webbing may appear on leaves."
-        ),
-        "care": [
-            "Inspect the undersides of leaves closely.",
-            "Check nearby plants for similar signs.",
-            "Avoid unnecessary broad-spectrum pesticide use.",
-            "Ask an agricultural expert about suitable mite management."
-        ]
+        "symptoms": "Fine pale speckles and sometimes delicate webbing may appear on leaves.",
+        "advice": "Inspect leaf undersides and seek advice about suitable pest management."
     },
     "Tomato___Target_Spot": {
         "name": "Target Spot",
-        "type": "Fungal disease",
-        "symptoms": (
-            "Brown lesions with concentric rings may appear on leaves "
-            "and sometimes other plant parts."
-        ),
-        "care": [
-            "Improve airflow around the plant.",
-            "Keep foliage as dry as practical.",
-            "Remove affected plant material when appropriate.",
-            "Seek local advice if symptoms continue to spread."
-        ]
+        "symptoms": "Brown lesions with concentric rings may appear on leaves.",
+        "advice": "Improve airflow, avoid overhead irrigation, and remove affected plant debris."
     },
     "Tomato___Tomato_Yellow_Leaf_Curl_Virus": {
         "name": "Tomato Yellow Leaf Curl Virus",
-        "type": "Viral disease",
-        "symptoms": (
-            "Leaves may curl upward, turn yellow and become smaller, "
-            "while plant growth may be reduced."
-        ),
-        "care": [
-            "Inspect plants for whiteflies, which can spread the virus.",
-            "Use locally recommended whitefly prevention methods.",
-            "Seek expert advice about severely affected plants.",
-            "Consider suitable resistant varieties for future crops."
-        ]
+        "symptoms": "Leaves may curl upward, turn yellow, and show reduced growth.",
+        "advice": "Inspect for whiteflies and ask an agricultural expert about virus management."
     },
     "Tomato___Tomato_mosaic_virus": {
         "name": "Tomato Mosaic Virus",
-        "type": "Viral disease",
-        "symptoms": (
-            "Leaves may show mottled light and dark green areas, "
-            "sometimes with distorted growth."
-        ),
-        "care": [
-            "Wash hands before handling healthy plants.",
-            "Clean gardening tools between plants.",
-            "Avoid handling plants when foliage is wet.",
-            "Seek expert advice about suspected viral infections."
-        ]
+        "symptoms": "Leaves may show mottled light and dark green areas or distorted growth.",
+        "advice": "Clean hands and tools after handling plants and seek expert guidance."
     },
     "Tomato___healthy": {
         "name": "Healthy Tomato Leaf",
-        "type": "Healthy category",
-        "symptoms": (
-            "The model identifies this image as belonging to the "
-            "healthy tomato-leaf category."
-        ),
-        "care": [
-            "Water according to soil and weather conditions.",
-            "Provide adequate sunlight and airflow.",
-            "Inspect leaves regularly for changes.",
-            "Maintain balanced soil nutrition."
-        ]
+        "symptoms": "The model identifies this image as belonging to the healthy tomato class.",
+        "advice": "Continue regular monitoring, appropriate watering, and good garden hygiene."
     }
 }
 
-# ==================================================
-# 4. CUSTOM WEBSITE DESIGN
-# ==================================================
-st.markdown("""
-<style>
-    .stApp {
-        background-color: #F8F7F1;
-        color: #183D2B;
-    }
-
-    [data-testid="stSidebar"] {
-        background-color: #EAF0E5;
-        border-right: 1px solid #D9E1D4;
-    }
-
-    h1, h2, h3 {
-        color: #174C36 !important;
-    }
-
-    .hero {
-        background: linear-gradient(115deg, #194F38, #78966C);
-        padding: 32px;
-        border-radius: 22px;
-        color: white;
-        margin-bottom: 24px;
-    }
-
-    .hero h1, .hero h2, .hero p {
-        color: white !important;
-    }
-
-    .eyebrow {
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 2px;
-        color: #D8E7C8;
-        text-transform: uppercase;
-    }
-
-    .info-card {
-        background: white;
-        border: 1px solid #DFE6DA;
-        border-radius: 18px;
-        padding: 23px;
-        min-height: 150px;
-        margin-bottom: 12px;
-    }
-
-    .info-card h3 {
-        font-size: 20px;
-        margin-top: 8px;
-    }
-
-    .muted {
-        color: #68766C;
-        font-size: 14px;
-    }
-
-    .result-card {
-        background: white;
-        border: 1px solid #DCE6D8;
-        border-radius: 18px;
-        padding: 25px;
-        margin-top: 12px;
-        margin-bottom: 15px;
-    }
-
-    div.stButton > button {
-        border-radius: 10px;
-        min-height: 42px;
-        font-weight: 600;
-        border: 1px solid #D5E0D0;
-    }
-
-    div.stButton > button[kind="primary"] {
-        background-color: #D94D43;
-        color: white;
-        border: none;
-    }
-
-    .footer {
-        border-top: 1px solid #DCE2D8;
-        margin-top: 35px;
-        padding-top: 16px;
-        color: #748075;
-        font-size: 12px;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# ==================================================
-# 5. NAVIGATION
-# ==================================================
-PAGES = [
-    "Home",
-    "Disease Detection",
-    "Tomato Care",
-    "Disease Library",
-    "About Project"
-]
-
-
-def go_to_page(target):
-    st.session_state["page_choice"] = target
-
-
-if "page_choice" not in st.session_state:
-    st.session_state["page_choice"] = "Home"
-
-if "prediction_result" not in st.session_state:
-    st.session_state["prediction_result"] = None
-
-if "prediction_image" not in st.session_state:
-    st.session_state["prediction_image"] = None
-
-with st.sidebar:
-    st.markdown(
-        "<h2>🍅 AgriShield</h2>"
-        "<p style='color:#78847B;font-size:12px;letter-spacing:1px;'>"
-        "TOMATO HEALTH ASSISTANT</p>",
-        unsafe_allow_html=True
-    )
-
-    st.divider()
-
-    st.radio(
-        "Navigate",
-        PAGES,
-        key="page_choice",
-        label_visibility="collapsed"
-    )
-
-    st.divider()
-    st.markdown("### 🌱 Our focus")
-    st.write("Helping users learn about tomato leaf health.")
-    st.caption(
-        "AI predictions are estimates, not confirmed diagnoses. "
-        "Verify important decisions with an agricultural expert."
-    )
-
-page = st.session_state["page_choice"]
-
-# ==================================================
-# 6. MODEL LOADING — FIXED GDOWN CALL
-# ==================================================
-@st.cache_resource(show_spinner="Loading the AgriShield model...")
+# --------------------------------------------------
+# LOAD MODEL
+# --------------------------------------------------
+@st.cache_resource
 def load_model():
-    if not os.path.exists(MODEL_PATH):
-        # FIX: Removed the unsupported fuzzy=True argument.
-        download_result = gdown.download(
+    if not os.path.exists(MODEL_PATH) or os.path.getsize(MODEL_PATH) == 0:
+        result = gdown.download(
             MODEL_URL,
             MODEL_PATH,
             quiet=False
         )
 
-        if download_result is None or not os.path.exists(MODEL_PATH):
+        if not result or not os.path.exists(MODEL_PATH):
             raise RuntimeError(
-                "Could not download the model from Google Drive. "
-                "Check that the file is shared with anyone who has the link."
+                "Model download failed. Check the Google Drive "
+                "sharing settings and model link."
             )
-
-    if os.path.getsize(MODEL_PATH) == 0:
-        raise RuntimeError("The downloaded model file is empty.")
 
     model = tf.keras.models.load_model(
         MODEL_PATH,
@@ -381,173 +144,187 @@ def load_model():
 
     if model.output_shape[-1] != len(CLASS_NAMES):
         raise ValueError(
-            f"Expected {len(CLASS_NAMES)} model classes, "
-            f"but found {model.output_shape[-1]}."
+            f"Model has {model.output_shape[-1]} outputs, "
+            f"but {len(CLASS_NAMES)} class labels are configured."
         )
 
     return model
 
 
-def predict_leaf(image):
-    image = image.convert("RGB").resize((128, 128))
-    array = np.asarray(image, dtype=np.float32) / 255.0
-    array = np.expand_dims(array, axis=0)
+# --------------------------------------------------
+# HELPER FUNCTIONS
+# --------------------------------------------------
+def prepare_image(image):
+    image = image.convert("RGB")
+    image = image.resize((128, 128))
 
-    model = load_model()
-    probabilities = model.predict(array, verbose=0)[0]
+    image_array = np.array(image, dtype=np.float32)
+    image_array = image_array / 255.0
+    image_array = np.expand_dims(image_array, axis=0)
 
-    predicted_index = int(np.argmax(probabilities))
-    confidence = float(probabilities[predicted_index])
-
-    return predicted_index, confidence
+    return image_array
 
 
-def show_footer():
-    st.markdown(
-        "<div class='footer'>AgriShield · Tomato Leaf Health Education"
-        "<br>AI predictions are informational and should be verified.</div>",
-        unsafe_allow_html=True
+def predict_disease(model, image):
+    processed_image = prepare_image(image)
+    predictions = model.predict(processed_image, verbose=0)[0]
+
+    index = int(np.argmax(predictions))
+    predicted_class = CLASS_NAMES[index]
+    confidence = float(predictions[index])
+
+    return predicted_class, confidence
+
+
+def show_disease_info(predicted_class):
+    info = TOMATO_DISEASES.get(predicted_class)
+
+    if info is None:
+        st.warning(
+            "The model's top prediction is not a tomato category. "
+            "Try a clear tomato leaf image. The model can still "
+            "misclassify images from other plants."
+        )
+        return
+
+    if predicted_class == "Tomato___healthy":
+        st.success(f"🌿 Prediction: {info['name']}")
+    else:
+        st.warning(f"🔎 Prediction: {info['name']}")
+
+    st.markdown("**Common symptoms**")
+    st.write(info["symptoms"])
+
+    st.markdown("**Suggested next steps**")
+    st.write(info["advice"])
+
+    st.caption(
+        "This is an AI prediction, not a confirmed diagnosis. "
+        "Check the plant and consult a local agricultural expert "
+        "before taking treatment decisions."
     )
 
 
-# ==================================================
-# PAGE 1: HOME
-# ==================================================
+# --------------------------------------------------
+# SESSION STATE
+# --------------------------------------------------
+if "page_choice" not in st.session_state:
+    st.session_state["page_choice"] = "Home"
+
+
+def go_to(page):
+    st.session_state["page_choice"] = page
+
+
+# --------------------------------------------------
+# SIDEBAR
+# --------------------------------------------------
+with st.sidebar:
+    st.title("🌱 AgriShield")
+    st.caption("Tomato Disease Identification")
+
+    st.divider()
+
+    st.radio(
+        "Navigation",
+        options=[
+            "Home",
+            "Disease Detection",
+            "Tomato Care",
+            "Disease Library",
+            "About Project"
+        ],
+        key="page_choice"
+    )
+
+    st.divider()
+
+    st.caption("AI-powered crop health support")
+    st.caption("Project: AgriShield")
+
+
+page = st.session_state["page_choice"]
+
+
+# --------------------------------------------------
+# HOME PAGE
+# --------------------------------------------------
 if page == "Home":
-    st.markdown("""
-    <div class="hero">
-        <div class="eyebrow">SMARTER TOMATO CARE</div>
-        <h1>Grow healthier tomatoes with AgriShield 🍅</h1>
-        <p>Explore tomato leaf health, learn about common diseases,
-        and discover practical plant-care guidance.</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.title("🌱 Welcome to AgriShield")
+    st.subheader("Smart Tomato Disease Identification")
 
-    st.markdown("## Welcome to your tomato care space")
     st.write(
-        "Explore possible tomato leaf diseases, learn everyday care "
-        "practices and discover ways to monitor plant health."
-    )
-
-    left, right = st.columns(2, gap="large")
-
-    with left:
-        st.markdown("""
-        <div class="info-card">
-            <p class="eyebrow" style="color:#527B50">01 / IDENTIFY</p>
-            <h3>🔬 Tomato Disease Detection</h3>
-            <p>Upload a clear tomato leaf photo to view the model's
-            predicted category, confidence score and educational guidance.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.button(
-            "🍅 Check a Tomato Leaf",
-            key="home_detect",
-            type="primary",
-            use_container_width=True,
-            on_click=go_to_page,
-            args=("Disease Detection",)
-        )
-
-    with right:
-        st.markdown("""
-        <div class="info-card">
-            <p class="eyebrow" style="color:#527B50">02 / PREVENT</p>
-            <h3>🌿 Better Tomato Care</h3>
-            <p>Learn about watering, soil, sunlight, airflow and simple
-            habits that help maintain healthier plants.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.button(
-            "Explore Tomato Care",
-            key="home_care",
-            use_container_width=True,
-            on_click=go_to_page,
-            args=("Tomato Care",)
-        )
-
-    st.markdown("## What you can explore")
-    c1, c2, c3 = st.columns(3)
-
-    with c1:
-        st.markdown("""
-        <div class="info-card">
-            <h3>🍃 Recognise</h3>
-            <p>Learn about tomato leaf categories and common symptoms.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.button(
-            "Open Disease Library",
-            key="home_library",
-            use_container_width=True,
-            on_click=go_to_page,
-            args=("Disease Library",)
-        )
-
-    with c2:
-        st.markdown("""
-        <div class="info-card">
-            <h3>💧 Maintain</h3>
-            <p>Understand practical watering, soil and plant-care habits.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.button(
-            "View Care Tips",
-            key="home_care2",
-            use_container_width=True,
-            on_click=go_to_page,
-            args=("Tomato Care",)
-        )
-
-    with c3:
-        st.markdown("""
-        <div class="info-card">
-            <h3>🛡️ Learn</h3>
-            <p>Explore preventive practices and learn about the project.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.button(
-            "About AgriShield",
-            key="home_about",
-            use_container_width=True,
-            on_click=go_to_page,
-            args=("About Project",)
-        )
-
-    show_footer()
-
-
-# ==================================================
-# PAGE 2: DISEASE DETECTION
-# ==================================================
-elif page == "Disease Detection":
-    st.markdown("## 🍅 Tomato Disease Detection")
-    st.write(
-        "Upload a clear image of a tomato leaf. AgriShield compares "
-        "the image with the categories learned by its trained model."
+        "AgriShield is a crop-health support website that uses "
+        "a trained Convolutional Neural Network (CNN) to analyze "
+        "plant leaf images and predict possible diseases."
     )
 
     st.info(
-        "For best results, use a clear, well-lit image with the leaf "
-        "visible and in focus. This interface is designed for tomato leaves."
+        "This version focuses on tomato leaf diseases and "
+        "healthy tomato leaves."
+    )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("### 🔍 Disease Detection")
+        st.write(
+            "Upload a tomato leaf image to see the model's prediction."
+        )
+        st.button(
+            "Start Detection",
+            on_click=go_to,
+            args=("Disease Detection",),
+            use_container_width=True
+        )
+
+    with col2:
+        st.markdown("### 📚 Disease Library")
+        st.write(
+            "Learn about the tomato disease categories supported "
+            "by the model."
+        )
+        st.button(
+            "Explore Diseases",
+            on_click=go_to,
+            args=("Disease Library",),
+            use_container_width=True
+        )
+
+    st.divider()
+    st.markdown("### How AgriShield Works")
+
+    st.markdown(
+        """
+        1. **Upload:** Choose a tomato leaf image.
+        2. **Preprocess:** The image is resized for the model.
+        3. **Predict:** The trained CNN analyzes the image.
+        4. **Review:** Read the predicted category and suggested next steps.
+        """
+    )
+
+
+# --------------------------------------------------
+# DISEASE DETECTION PAGE
+# --------------------------------------------------
+elif page == "Disease Detection":
+    st.title("🔬 Tomato Disease Detection")
+
+    st.write(
+        "Upload a clear image of a tomato leaf. For best results, "
+        "use a well-lit image with the leaf clearly visible."
     )
 
     uploaded_file = st.file_uploader(
-        "Upload tomato leaf image",
-        type=["jpg", "jpeg", "png"],
-        key="tomato_upload"
+        "Choose a tomato leaf image",
+        type=["jpg", "jpeg", "png"]
     )
 
     if uploaded_file is not None:
         try:
             image = Image.open(uploaded_file).convert("RGB")
 
-            left, right = st.columns([1, 1], gap="large")
+            left, right = st.columns([1, 1])
 
             with left:
                 st.image(
@@ -556,321 +333,173 @@ elif page == "Disease Detection":
                     use_container_width=True
                 )
 
+            with st.spinner("Analyzing the image..."):
+                model = load_model()
+                predicted_class, confidence = predict_disease(
+                    model,
+                    image
+                )
+
             with right:
-                st.markdown("### Ready to check?")
-                st.write("Select the button below to run the model.")
+                st.markdown("### Analysis Result")
 
-                if st.button(
-                    "🔍 Analyse Tomato Leaf",
-                    type="primary",
-                    use_container_width=True,
-                    key="analyse_leaf"
-                ):
-                    try:
-                        with st.spinner("Analysing the image..."):
-                            index, confidence = predict_leaf(image)
-
-                        predicted_class = CLASS_NAMES[index]
-
-                        if predicted_class.startswith("Tomato___"):
-                            st.session_state["prediction_result"] = {
-                                "status": "tomato",
-                                "class": predicted_class,
-                                "confidence": confidence,
-                                "image_name": uploaded_file.name
-                            }
-                        else:
-                            st.session_state["prediction_result"] = {
-                                "status": "not_tomato",
-                                "class": predicted_class,
-                                "confidence": confidence,
-                                "image_name": uploaded_file.name
-                            }
-
-                        st.session_state["prediction_image"] = uploaded_file.name
-
-                    except Exception as error:
-                        st.error(
-                            "The model could not analyse this image. "
-                            "Please try again."
-                        )
-                        st.caption(f"Technical details: {error}")
-
-        except Exception:
-            st.error("This file could not be opened as an image.")
-
-    result = st.session_state.get("prediction_result")
-
-    # Do not display a result from a different uploaded image.
-    if (
-        uploaded_file is not None
-        and result is not None
-        and result.get("image_name") == uploaded_file.name
-    ):
-        st.divider()
-
-        if result["status"] == "not_tomato":
-            st.warning(
-                "The model's top prediction is not a tomato category. "
-                "Try a clear tomato leaf image. Note that the model can "
-                "still misclassify images from other plants."
-            )
-
-        else:
-            info = DISEASE_INFO[result["class"]]
-
-            st.markdown("## Analysis result")
-
-            st.markdown(
-                f"""
-                <div class="result-card">
-                    <p class="eyebrow" style="color:#527B50">PREDICTED CATEGORY</p>
-                    <h2>{info['name']}</h2>
-                    <p class="muted">{info['type']}</p>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
-            st.metric(
-                "Model confidence",
-                f"{result['confidence'] * 100:.2f}%"
-            )
-
-            st.progress(
-                min(max(result["confidence"], 0.0), 1.0)
-            )
-
-            st.caption(
-                "Confidence is the model's score for its predicted class. "
-                "It does not guarantee that the prediction is correct."
-            )
-
-            st.markdown("### 🔎 What to look for")
-            st.write(info["symptoms"])
-
-            st.markdown("### 🌱 Suggested care and next steps")
-            for item in info["care"]:
-                st.markdown(f"- {item}")
-
-            if result["class"] != "Tomato___healthy":
-                st.warning(
-                    "This is an AI-generated prediction, not a confirmed "
-                    "diagnosis. Similar symptoms can have different causes. "
-                    "Consult an agricultural expert before using treatments."
-                )
-            else:
-                st.success(
-                    "The model classified this image as a healthy tomato "
-                    "leaf. Continue checking the plant regularly."
+                # TEMPORARY DEBUG OUTPUT
+                st.write("Debug predicted class:", predicted_class)
+                st.write(
+                    "Debug confidence:",
+                    round(confidence * 100, 2),
+                    "%"
                 )
 
-    show_footer()
+                st.metric(
+                    "Model confidence",
+                    f"{confidence * 100:.2f}%"
+                )
+
+                show_disease_info(predicted_class)
+
+        except Exception as error:
+            st.error(
+                "The image could not be analyzed. "
+                "Please check the model file and app logs."
+            )
+            st.exception(error)
+
+    else:
+        st.info(
+            "Please upload a JPG, JPEG, or PNG image to begin."
+        )
 
 
-# ==================================================
-# PAGE 3: TOMATO CARE
-# ==================================================
+# --------------------------------------------------
+# TOMATO CARE PAGE
+# --------------------------------------------------
 elif page == "Tomato Care":
-    st.markdown("## 🌿 Better Tomato Care")
+    st.title("🌿 Tomato Plant Care")
+
     st.write(
-        "Simple everyday practices can help tomato plants grow well "
-        "and make it easier to notice problems early."
+        "Good growing practices can help reduce disease risks "
+        "and support healthy tomato plants."
     )
 
-    c1, c2 = st.columns(2, gap="large")
+    st.markdown("### Practical Care Tips")
 
-    with c1:
-        st.markdown("""
-        <div class="info-card">
-            <h3>💧 Watering</h3>
-            Water consistently according to the weather and soil moisture.
-            Prefer watering near the soil and avoid waterlogged soil.
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("""
-        <div class="info-card">
-            <h3>☀️ Sunlight</h3>
-            Tomatoes generally grow best with plenty of sunlight.
-            Choose a suitable location and monitor plants in very hot weather.
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("""
-        <div class="info-card">
-            <h3>🌱 Soil and Nutrition</h3>
-            Use well-drained soil and balanced nutrition. Consider plant
-            needs and local advice before applying fertiliser.
-        </div>
-        """, unsafe_allow_html=True)
-
-    with c2:
-        st.markdown("""
-        <div class="info-card">
-            <h3>🌬️ Airflow</h3>
-            Provide adequate spacing between plants. Good airflow helps
-            leaves dry and can reduce conditions favourable to some diseases.
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("""
-        <div class="info-card">
-            <h3>🔍 Regular Inspection</h3>
-            Check both sides of leaves for spots, yellowing, curling,
-            unusual patterns or pests.
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("""
-        <div class="info-card">
-            <h3>🧹 Garden Hygiene</h3>
-            Keep the growing area clean and clean tools between plants.
-            Handle suspected diseased plants carefully.
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("## Daily tomato plant checklist")
-
-    checklist = [
-        "Check leaves for unusual spots or colour changes",
-        "Check soil moisture before watering",
-        "Look for pests under the leaves",
-        "Check that plants have enough airflow",
-        "Record symptoms that are getting worse"
+    tips = [
+        (
+            "Water near the soil",
+            "Avoid unnecessarily wetting leaves, especially late in the day."
+        ),
+        (
+            "Allow air circulation",
+            "Give plants adequate spacing and avoid overcrowding."
+        ),
+        (
+            "Inspect leaves regularly",
+            "Check both sides of leaves for unusual spots, curling, or pests."
+        ),
+        (
+            "Keep the garden clean",
+            "Remove fallen, diseased plant material appropriately."
+        ),
+        (
+            "Clean gardening tools",
+            "Clean tools between plants when disease is suspected."
+        ),
+        (
+            "Get expert advice",
+            "Confirm the problem before choosing a pesticide or other treatment."
+        )
     ]
 
-    for item in checklist:
-        st.checkbox(item, key=f"care_{item}")
+    for title, description in tips:
+        with st.expander(title):
+            st.write(description)
 
-    st.caption(
-        "These are general educational tips. Specific care depends on "
-        "the tomato variety, growing conditions and local climate."
+    st.warning(
+        "Different diseases can have similar symptoms. "
+        "Use the model result as an initial guide, not as a "
+        "replacement for expert diagnosis."
     )
 
-    show_footer()
 
-
-# ==================================================
-# PAGE 4: DISEASE LIBRARY
-# ==================================================
+# --------------------------------------------------
+# DISEASE LIBRARY PAGE
+# --------------------------------------------------
 elif page == "Disease Library":
-    st.markdown("## 📚 Tomato Disease Library")
+    st.title("📚 Tomato Disease Library")
+
     st.write(
-        "Browse the tomato categories supported by the trained model. "
-        "Listed symptoms are common signs, not a definitive diagnosis."
+        "Explore the tomato categories supported by the trained model."
     )
 
-    selected_key = st.selectbox(
-        "Choose a tomato category",
-        options=list(DISEASE_INFO.keys()),
-        format_func=lambda key: DISEASE_INFO[key]["name"]
+    search_text = st.text_input(
+        "Search a disease",
+        placeholder="For example, Early Blight"
     )
 
-    info = DISEASE_INFO[selected_key]
+    for class_name, info in TOMATO_DISEASES.items():
+        if (
+            search_text.strip().lower() in info["name"].lower()
+            or search_text.strip() == ""
+        ):
+            with st.expander(info["name"]):
+                st.write("**Common symptoms:**")
+                st.write(info["symptoms"])
+
+                st.write("**Suggested next steps:**")
+                st.write(info["advice"])
+
+
+# --------------------------------------------------
+# ABOUT PROJECT PAGE
+# --------------------------------------------------
+elif page == "About Project":
+    st.title("ℹ️ About AgriShield")
+
+    st.write(
+        "AgriShield is an educational project designed to demonstrate "
+        "how artificial intelligence can support preliminary plant "
+        "disease identification using leaf images."
+    )
+
+    st.markdown("### Technologies Used")
 
     st.markdown(
-        f"""
-        <div class="result-card">
-            <p class="eyebrow" style="color:#527B50">TOMATO HEALTH GUIDE</p>
-            <h2>{info['name']}</h2>
-            <p class="muted">{info['type']}</p>
-            <h3>Common symptoms</h3>
-            <p>{info['symptoms']}</p>
-        </div>
-        """,
-        unsafe_allow_html=True
+        """
+        - **Python:** Main programming language.
+        - **TensorFlow and Keras:** Load and run the trained model.
+        - **CNN:** Learns visual patterns from leaf images.
+        - **NumPy:** Prepares numerical image data.
+        - **Pillow:** Opens and resizes uploaded images.
+        - **Streamlit:** Builds the interactive web application.
+        """
     )
 
-    st.markdown("### Suggested care and next steps")
-    for item in info["care"]:
-        st.markdown(f"- {item}")
+    st.markdown("### Project Workflow")
 
-    st.divider()
-    st.markdown("### Categories supported by AgriShield")
+    st.code(
+        "Tomato Leaf Image\n"
+        "       ↓\n"
+        "Image Preprocessing\n"
+        "       ↓\n"
+        "Trained CNN Model\n"
+        "       ↓\n"
+        "Predicted Class and Confidence\n"
+        "       ↓\n"
+        "Disease Information and Care Suggestions",
+        language="text"
+    )
 
-    for info_item in DISEASE_INFO.values():
-        st.markdown(
-            f"- **{info_item['name']}** — {info_item['type']}"
-        )
+    st.markdown("### Important Limitation")
 
-    show_footer()
+    st.write(
+        "The model was trained on a dataset containing multiple "
+        "plant categories, even though this website presents only "
+        "tomato-related results. It can incorrectly classify images, "
+        "so predictions should be verified before acting on them."
+    )
 
-
-# ==================================================
-# PAGE 5: ABOUT PROJECT
-# ==================================================
-elif page == "About Project":
-    st.markdown("## 🌱 About AgriShield")
-
-    st.markdown("""
-    <div class="hero">
-        <div class="eyebrow">OUR COLLEGE PROJECT</div>
-        <h2>AI-assisted tomato leaf health education</h2>
-        <p>
-            AgriShield uses a trained deep-learning image classification
-            model to estimate the category of a submitted leaf image.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("### 🎯 Project objectives")
-
-    st.markdown("""
-    - Explore image-based tomato leaf classification.
-    - Present model predictions in a simple website.
-    - Share educational information about common tomato leaf problems.
-    - Encourage regular plant inspection and informed prevention practices.
-    """)
-
-    st.markdown("### ⚙️ How the system works")
-
-    steps = [
-        ("01", "Image Upload", "The user uploads a tomato leaf image."),
-        ("02", "Preprocessing", "The image is resized to 128 × 128 pixels and normalised."),
-        ("03", "CNN Model", "The trained model predicts a class from visual patterns."),
-        ("04", "Result", "The website displays the predicted category and confidence score."),
-        ("05", "Guidance", "The user sees educational symptoms and general care suggestions.")
-    ]
-
-    for number, title, description in steps:
-        st.markdown(
-            f"""
-            <div class="info-card" style="min-height:90px;">
-                <p class="eyebrow" style="color:#527B50">{number}</p>
-                <h3>{title}</h3>
-                <p>{description}</p>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    st.markdown("### 🧰 Technologies used")
-
-    tech1, tech2 = st.columns(2)
-
-    with tech1:
-        st.markdown("""
-        - **Python:** Main programming language
-        - **TensorFlow / Keras:** Loads and runs the trained model
-        - **CNN:** Learns visual patterns in leaf images
-        """)
-
-    with tech2:
-        st.markdown("""
-        - **Streamlit:** Website interface
-        - **NumPy:** Image array processing
-        - **Pillow:** Image opening and resizing
-        """)
-
-    st.markdown("### ⚠️ Limitations")
-
-    st.markdown("""
-    - Predictions depend on image quality and training data.
-    - Similar symptoms can arise from different causes.
-    - A high confidence score does not guarantee correctness.
-    - The website does not replace laboratory testing or professional advice.
-    - Treatment decisions should be checked with an agricultural expert.
-    """)
-
-    show_footer()
+    st.caption(
+        "AgriShield is an educational prototype and does not "
+        "replace professional agricultural diagnosis."
+    )
