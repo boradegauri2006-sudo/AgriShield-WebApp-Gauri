@@ -1,123 +1,96 @@
-# HISTORY
-# =========================================================
-elif st.session_state.page == "History":
-    st.title(t["history"])
-    records = st.session_state.history
-
-    if not records:
-        st.info(t["history_empty"])
-    else:
-        st.caption(
-            "History is stored in a local JSON file. On Streamlit Cloud, it may "
-            "not survive app restarts and should not be treated as a private "
-            "multi-user database."
-        )
-
-        if st.button(t["clear"], type="secondary"):
-            st.session_state.history = []
-            st.session_state.latest_result = None
-            saved = save_history([])
-            if saved:
-                st.success("History cleared.")
-            else:
-                st.warning("History cleared for this session, but the file could not be updated.")
-            st.rerun()
-
-        for i, record in enumerate(records):
-            with st.expander(
-                f'{record.get("date", "Unknown date")} · '
-                f'{record.get("display_name", "Unknown result")} · '
-                f'{record.get("confidence", 0):.1f}%'
-            ):
-                st.write(f'**{t["confidence"]}:** {record.get("confidence", 0):.1f}%')
-                st.write(f'**{t["symptoms"]}:**')
-                show_bullets(record.get("symptoms", []))
-                st.write(f'**{t["actions"]}:**')
-                show_bullets(record.get("actions", []))
-
-                pdf = create_pdf_report(record, language)
-                if pdf:
-                    st.download_button(
-                        "Download this report",
-                        data=pdf,
-                        file_name=f"AgriShield_Report_{i + 1}.pdf",
-                        mime="application/pdf",
-                        key=f"history_pdf_{i}",
-                    )
+import os
+import io
+import json
+import datetime
+import gdown
+import streamlit as st
+import numpy as np
+import tensorflow as tf
+from PIL import Image
 
 # =========================================================
-# CARE GUIDE
+# AGRISHIELD — CONFIGURATION
 # =========================================================
-elif st.session_state.page == "Care":
-    st.title(t["care"])
-    if language == "मराठी":
-        st.markdown('<div class="care-intro"><h3>लहान सवयी, निरोगी झाडे 🌿</h3><p>टोमॅटोच्या झाडांची नियमित काळजी घेतल्याने काही सामान्य समस्यांचा धोका कमी होऊ शकतो.</p></div>', unsafe_allow_html=True)
-        care_sections = [
-            ("☀️ सूर्यप्रकाश आणि अंतर", ["टोमॅटोच्या झाडांना शक्यतो दररोज ६–८ तास सूर्यप्रकाश मिळू द्या.", "झाडांमध्ये हवा खेळती राहील असे अंतर ठेवा."]),
-            ("💧 पाणी देणे", ["झाडाच्या मुळाजवळ पाणी द्या.", "मातीचा ओलावा तपासून पाणी द्या; पाणी साचू देऊ नका.", "पानांवर सतत पाणी राहणे टाळा."]),
-            ("🍃 स्वच्छता", ["गळलेली आणि बाधित पाने काढा.", "बाधित झाड हाताळल्यानंतर साधने स्वच्छ करा.", "बाधित अवशेषांची योग्य विल्हेवाट लावा."]),
-            ("🔎 नियमित तपासणी", ["पानांच्या वरच्या आणि खालच्या बाजू तपासा.", "पानांवरील डाग, पिवळेपणा किंवा बारीक जाळी पाहा.", "रोग पसरत असल्यास कृषी तज्ज्ञांचा सल्ला घ्या."]),
-        ]
-    else:
-        st.markdown('<div class="care-intro"><h3>Small habits. Healthier plants. 🌿</h3><p>A simple routine can help you notice changes early and keep tomato plants in better growing conditions.</p></div>', unsafe_allow_html=True)
-        care_sections = [
-            ("☀️ Sunlight and spacing", ["Aim for around 6–8 hours of sunlight when practical.", "Space plants so air can move between them."]),
-            ("💧 Watering", ["Water near the base of the plant.", "Check soil moisture and avoid waterlogging.", "Avoid keeping leaves wet for long periods."]),
-            ("🍃 Cleanliness", ["Remove fallen and badly affected leaves.", "Clean tools after handling affected plants.", "Dispose of diseased debris appropriately."]),
-            ("🔎 Regular inspection", ["Check the upper and lower sides of leaves.", "Look for spots, yellowing or fine webbing.", "Seek expert advice if symptoms spread."]),
-        ]
-    cols = st.columns(2, gap="large")
-    for index, (title, points) in enumerate(care_sections):
-        with cols[index % 2]:
-            st.markdown(f'<div class="care-panel"><h3>{title}</h3><ul>' + ''.join(f'<li>{point}</li>' for point in points) + '</ul></div>', unsafe_allow_html=True)
-    st.info("ही सर्वसाधारण काळजीची माहिती आहे; रोगाचे निदान किंवा उपचारांसाठी कृषी तज्ज्ञांचा सल्ला घ्या." if language == "मराठी" else "These are general care tips, not a diagnosis or treatment plan. Ask a local agriculture expert for disease-specific advice.")
-
-# =========================================================
-# ABOUT
-# =========================================================
-elif st.session_state.page == "About":
-    st.title(t["about"])
-    if language == "मराठी":
-        st.write(
-            "AgriShield हा टोमॅटोच्या पानांवरील संभाव्य रोग ओळखण्यासाठी तयार केलेला "
-            "विद्यार्थी प्रकल्प आहे. हा CNN आधारित मॉडेल वापरतो. निकाल हा केवळ "
-            "प्राथमिक अंदाज आहे; तो तज्ज्ञांच्या निदानाची जागा घेत नाही."
-        )
-        st.markdown("### वापरलेली तंत्रज्ञाने")
-        show_bullets([
-            "Python",
-            "Streamlit — वेबसाइट इंटरफेस",
-            "TensorFlow आणि Keras — प्रशिक्षित मॉडेल",
-            "NumPy आणि Pillow — प्रतिमा प्रक्रिया",
-            "JSON — स्थानिक इतिहास नोंद",
-        ])
-    else:
-        st.write(
-            "AgriShield is a student project that uses a trained CNN model to "
-            "estimate which of nine tomato conditions, or a healthy leaf, best "
-            "matches an uploaded photo. It is intended as an educational first check."
-        )
-        st.markdown("### Technologies used")
-        show_bullets([
-            "Python",
-            "Streamlit for the web interface",
-            "TensorFlow and Keras for model inference",
-            "NumPy and Pillow for image processing",
-            "JSON for local history storage",
-            "ReportLab for PDF reports",
-        ])
-
-    st.warning(
-        "Model confidence is not the same as real-world accuracy. The damage "
-        "estimate is experimental, may include background pixels, and should "
-        "not be used as a treatment decision."
-    )
-
-# =========================================================
-# FOOTER
-# =========================================================
-st.markdown(
-    '<div class="ag-footer">🍃 <b>AgriShield</b> · Student project · '
-    'AI predictions should be confirmed by an agriculture expert.</div>',
-    unsafe_allow_html=True,
+st.set_page_config(
+    page_title="AgriShield | Tomato Health",
+    page_icon="🍅",
+    layout="wide",
+    initial_sidebar_state="collapsed",
 )
+
+MODEL_PATH = "trained_model.h5"
+MODEL_URL = "https://drive.google.com/uc?id=1YNIs92QlZIJP0YQ2e5jGWUAuEWgFR_lE"
+HISTORY_PATH = "diagnosis_history.json"
+IMAGE_SIZE = (128, 128)
+
+# Disease photos should be stored in the repository's assets/ folder.
+DISEASE_IMAGES = {
+    "Tomato___Bacterial_spot": "assets/bacterial_spot.jpg",
+    "Tomato___Early_blight": "assets/early_blight.jpg",
+    "Tomato___Late_blight": "assets/late_blight.jpg",
+    "Tomato___Leaf_Mold": "assets/leaf_mold.jpg",
+    "Tomato___Septoria_leaf_spot": "assets/septoria_leaf_spot.jpg",
+    "Tomato___Spider_mites Two-spotted_spider_mite": "assets/spider_mites.jpg",
+    "Tomato___Target_Spot": "assets/target_spot.jpg",
+    "Tomato___Tomato_Yellow_Leaf_Curl_Virus": "assets/yellow_leaf_curl.jpg",
+    "Tomato___Tomato_mosaic_virus": "assets/mosaic_virus.jpg",
+    "Tomato___healthy": "assets/healthy_leaf.jpg",
+}
+
+CLASS_NAMES = [
+    "Apple___Apple_scab",
+    "Apple___Black_rot",
+    "Apple___Cedar_apple_rust",
+    "Apple___healthy",
+    "Blueberry___healthy",
+    "Cherry_(including_sour)___Powdery_mildew",
+    "Cherry_(including_sour)___healthy",
+    "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot",
+    "Corn_(maize)___Common_rust_",
+    "Corn_(maize)___Northern_Leaf_Blight",
+    "Corn_(maize)___healthy",
+    "Grape___Black_rot",
+    "Grape___Esca_(Black_Measles)",
+    "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)",
+    "Grape___healthy",
+    "Orange___Haunglongbing_(Citrus_greening)",
+    "Peach___Bacterial_spot",
+    "Peach___healthy",
+    "Pepper,_bell___Bacterial_spot",
+    "Pepper,_bell___healthy",
+    "Potato___Early_blight",
+    "Potato___Late_blight",
+    "Potato___healthy",
+    "Raspberry___healthy",
+    "Soybean___healthy",
+    "Squash___Powdery_mildew",
+    "Strawberry___Leaf_scorch",
+    "Strawberry___healthy",
+    "Tomato___Bacterial_spot",
+    "Tomato___Early_blight",
+    "Tomato___Late_blight",
+    "Tomato___Leaf_Mold",
+    "Tomato___Septoria_leaf_spot",
+    "Tomato___Spider_mites Two-spotted_spider_mite",
+    "Tomato___Target_Spot",
+    "Tomato___Tomato_Yellow_Leaf_Curl_Virus",
+    "Tomato___Tomato_mosaic_virus",
+    "Tomato___healthy",
+]
+
+TOMATO_INDICES = [
+    i for i, name in enumerate(CLASS_NAMES)
+    if name.startswith("Tomato")
+]
+
+# =========================================================
+# ENGLISH + MARATHI CONTENT
+# =========================================================
+DISEASES = {
+    "Tomato___Bacterial_spot": {
+        "en": {
+            "name": "Bacterial Spot",
+            "kind": "Bacterial",
+            "urgency": "Medium",
+            "cause": "Bacteria",
+            "summary": "Small dark spots may appear on leaves and fruit.",
