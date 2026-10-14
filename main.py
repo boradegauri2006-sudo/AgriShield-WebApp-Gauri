@@ -1,4 +1,4 @@
-import os 
+import os  
 import gdown
 import streamlit as st
 import numpy as np
