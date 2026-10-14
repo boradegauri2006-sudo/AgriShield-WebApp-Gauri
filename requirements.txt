@@ -4,3 +4,5 @@ tensorflow==2.20.0
 numpy
 pillow
 gdown
+opencv-python-headless
+reportlab
